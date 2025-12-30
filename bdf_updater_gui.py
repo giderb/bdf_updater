@@ -27,6 +27,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
 from PyQt5.QtGui import QFont, QColor, QPalette
 
+from icon_resources import get_app_icon
 from bdf_processor import (
     BDFProcessor, ShellPropertyUpdate, BarPropertyUpdate,
     PropertyUpdateResult, CSVParseError, BDFProcessorError
@@ -638,8 +639,13 @@ def main():
     app.setApplicationVersion("1.0.0")
     app.setOrganizationName("BDF Tools")
 
+    # Set application icon (appears in taskbar and window decorations)
+    app_icon = get_app_icon()
+    app.setWindowIcon(app_icon)
+
     # Create and show main window
     window = BDFUpdaterMainWindow()
+    window.setWindowIcon(app_icon)
     window.show()
 
     sys.exit(app.exec_())
