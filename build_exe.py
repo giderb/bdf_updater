@@ -80,12 +80,12 @@ def check_requirements() -> bool:
         print("  ✗ Pillow NOT INSTALLED (required for icon generation)")
         missing.append("pillow")
 
-    # Check cairosvg (optional)
+    # Check cairosvg (optional - requires Cairo C library)
     try:
         import cairosvg
         print(f"  ✓ cairosvg (optional, better SVG quality)")
-    except ImportError:
-        print("  ○ cairosvg not installed (optional)")
+    except (ImportError, OSError):
+        print("  ○ cairosvg not available (optional - requires Cairo library)")
 
     # Check PyQt5
     try:

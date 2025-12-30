@@ -3,3 +3,11 @@ PyQt5>=5.15.0
 pandas>=1.3.0
 pytest>=7.0.0
 pytest-qt>=4.2.0
+# PyInstaller for creating executables
+pyinstaller>=5.0
+
+# Icon generation
+Pillow>=9.0.0
+
+# Better SVG rendering (optional but recommended)
+cairosvg>=2.5.0

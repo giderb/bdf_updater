@@ -24,7 +24,7 @@ except ImportError:
 try:
     import cairosvg
     HAS_CAIROSVG = True
-except ImportError:
+except (ImportError, OSError):
     HAS_CAIROSVG = False
 
 
@@ -49,7 +49,7 @@ def svg_to_png_pyqt(svg_path: Path, png_path: Path, size: int) -> bool:
     """Convert SVG to PNG using PyQt5 (fallback)."""
     try:
         from PyQt5.QtWidgets import QApplication
-        from PyQt5.QtCore import QByteArray
+        from PyQt5.QtCore import QByteArray, Qt
         from PyQt5.QtGui import QPixmap, QPainter
         from PyQt5.QtSvg import QSvgRenderer
 
@@ -65,7 +65,7 @@ def svg_to_png_pyqt(svg_path: Path, png_path: Path, size: int) -> bool:
         # Render to pixmap
         renderer = QSvgRenderer(QByteArray(svg_data))
         pixmap = QPixmap(size, size)
-        pixmap.fill(0)  # Transparent
+        pixmap.fill(Qt.transparent)  # Transparent
 
         painter = QPainter(pixmap)
         renderer.render(painter)
