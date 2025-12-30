@@ -27,10 +27,13 @@ class ShellPropertyUpdate:
 
 @dataclass
 class BarPropertyUpdate:
-    """Data class for bar property updates (rectangular PBARL)."""
+    """Data class for bar property updates (rectangular PBARL).
+
+    If height or width is None, the current value will be preserved.
+    """
     property_id: int
-    height: float
-    width: float
+    height: Optional[float] = None
+    width: Optional[float] = None
 
 
 @dataclass
@@ -205,6 +208,7 @@ class BDFProcessor:
         Parse a CSV file for bar property updates.
 
         Expected format: property_id, height, width
+        If height or width is blank/empty, the current value will be preserved.
 
         Args:
             csv_path: Path to the CSV file
@@ -227,27 +231,61 @@ class BDFProcessor:
                 for row in reader:
                     line_num += 1
                     # Skip empty rows
-                    if not row or len(row) < 3:
+                    if not row or len(row) < 1:
                         continue
+
+                    # Pad row to have at least 3 columns
+                    while len(row) < 3:
+                        row.append('')
 
                     # Skip header if present
                     try:
                         pid = int(row[0].strip())
-                        height = float(row[1].strip())
-                        width = float(row[2].strip())
                     except ValueError:
                         # Likely a header row, skip it
                         if line_num == 1:
                             continue
                         raise CSVParseError(
-                            f"Invalid data at line {line_num}: "
-                            f"expected (int, float, float), got ({row[0]}, {row[1]}, {row[2]})"
+                            f"Invalid property ID at line {line_num}: {row[0]}"
                         )
 
-                    if height <= 0 or width <= 0:
+                    # Parse height (optional - blank means keep current)
+                    height_str = row[1].strip() if len(row) > 1 else ''
+                    height: Optional[float] = None
+                    if height_str:
+                        try:
+                            height = float(height_str)
+                            if height <= 0:
+                                raise CSVParseError(
+                                    f"Invalid height at line {line_num}: "
+                                    f"must be positive, got {height}"
+                                )
+                        except ValueError:
+                            raise CSVParseError(
+                                f"Invalid height at line {line_num}: {height_str}"
+                            )
+
+                    # Parse width (optional - blank means keep current)
+                    width_str = row[2].strip() if len(row) > 2 else ''
+                    width: Optional[float] = None
+                    if width_str:
+                        try:
+                            width = float(width_str)
+                            if width <= 0:
+                                raise CSVParseError(
+                                    f"Invalid width at line {line_num}: "
+                                    f"must be positive, got {width}"
+                                )
+                        except ValueError:
+                            raise CSVParseError(
+                                f"Invalid width at line {line_num}: {width_str}"
+                            )
+
+                    # At least one dimension must be specified
+                    if height is None and width is None:
                         raise CSVParseError(
-                            f"Invalid dimensions at line {line_num}: "
-                            f"dimensions must be positive, got height={height}, width={width}"
+                            f"At line {line_num}: at least one dimension "
+                            f"(height or width) must be specified"
                         )
 
                     updates.append(BarPropertyUpdate(
@@ -316,10 +354,12 @@ class BDFProcessor:
         Update a single PBARL property (rectangular section).
 
         For rectangular (BAR) sections, dimensions are [width, height] or [height, width]
-        depending on the convention. This method sets dim[0]=height, dim[1]=width.
+        depending on the convention. This method sets dim[0]=width, dim[1]=height.
+
+        If update.height or update.width is None, the current value is preserved.
 
         Args:
-            update: BarPropertyUpdate with new height and width
+            update: BarPropertyUpdate with new height and/or width
 
         Returns:
             PropertyUpdateResult with operation status
@@ -365,19 +405,24 @@ class BDFProcessor:
             )
 
         old_dims = list(prop.dim) if hasattr(prop, 'dim') else []
+        old_width = old_dims[0] if len(old_dims) > 0 else 0.0
+        old_height = old_dims[1] if len(old_dims) > 1 else 0.0
+
+        # Use new values if provided, otherwise keep current
+        new_width = update.width if update.width is not None else old_width
+        new_height = update.height if update.height is not None else old_height
 
         # For BAR (rectangular) section: dim = [width, height]
         # Per Nastran documentation: DIM1=width (horizontal), DIM2=height (vertical)
-        prop.dim = [update.width, update.height]
+        prop.dim = [new_width, new_height]
 
         return PropertyUpdateResult(
             property_id=pid,
             property_type='PBARL',
             success=True,
-            old_values={'dimensions': old_dims, 'height': old_dims[1] if len(old_dims) > 1 else None,
-                       'width': old_dims[0] if len(old_dims) > 0 else None},
-            new_values={'dimensions': [update.width, update.height],
-                       'height': update.height, 'width': update.width}
+            old_values={'dimensions': old_dims, 'height': old_height, 'width': old_width},
+            new_values={'dimensions': [new_width, new_height],
+                       'height': new_height, 'width': new_width}
         )
 
     def apply_shell_updates(self, updates: List[ShellPropertyUpdate]) -> List[PropertyUpdateResult]:
@@ -542,14 +587,19 @@ class BDFProcessor:
                         bar_type = getattr(prop, 'bar_type', None) or getattr(prop, 'Type', None)
                         if bar_type == 'BAR':
                             dims = list(prop.dim) if hasattr(prop, 'dim') else []
+                            current_width = dims[0] if len(dims) > 0 else 0.0
+                            current_height = dims[1] if len(dims) > 1 else 0.0
+                            # Use current value if update value is None
+                            new_width = update.width if update.width is not None else current_width
+                            new_height = update.height if update.height is not None else current_height
                             preview.append({
                                 'property_id': pid,
                                 'property_type': 'PBARL',
                                 'bar_type': bar_type,
-                                'current_width': dims[0] if len(dims) > 0 else None,
-                                'current_height': dims[1] if len(dims) > 1 else None,
-                                'new_width': update.width,
-                                'new_height': update.height,
+                                'current_width': current_width,
+                                'current_height': current_height,
+                                'new_width': new_width,
+                                'new_height': new_height,
                                 'status': 'valid'
                             })
                         else:
