@@ -1,0 +1,34 @@
+$ Main BDF file with INCLUDE statement for testing write_bdfs
+$ This tests the preservation of INCLUDE structure
+$
+SOL 101
+CEND
+$
+SUBCASE 1
+  SUBTITLE=MAIN WITH INCLUDE TEST
+  LOAD = 1
+  SPC = 1
+BEGIN BULK
+$
+INCLUDE 'properties.bdf'
+$
+$ Grid Points
+$
+GRID    1       0       0.0     0.0     0.0
+GRID    2       0       1.0     0.0     0.0
+GRID    3       0       1.0     1.0     0.0
+GRID    4       0       0.0     1.0     0.0
+$
+$ Shell Elements
+$
+CQUAD4  1       101     1       2       3       4
+$
+$ Constraints
+$
+SPC1    1       123456  1
+$
+$ Loads
+$
+FORCE   1       3       0       100.0   0.0     -1.0    0.0
+$
+ENDDATA

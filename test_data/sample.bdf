@@ -1,0 +1,65 @@
+$ Sample Nastran BDF file for testing
+$ Contains PSHELL and PBARL properties
+$
+SOL 101
+CEND
+$
+SUBCASE 1
+  SUBTITLE=TEST CASE
+  LOAD = 1
+  SPC = 1
+  DISPLACEMENT(PRINT) = ALL
+  STRESS(PRINT) = ALL
+BEGIN BULK
+$
+$ Grid Points
+$
+GRID    1       0       0.0     0.0     0.0
+GRID    2       0       1.0     0.0     0.0
+GRID    3       0       2.0     0.0     0.0
+GRID    4       0       0.0     1.0     0.0
+GRID    5       0       1.0     1.0     0.0
+GRID    6       0       2.0     1.0     0.0
+GRID    7       0       3.0     0.0     0.0
+GRID    8       0       4.0     0.0     0.0
+$
+$ Materials
+$
+MAT1    1       2.1+11  0.3     7850.0
+MAT1    2       7.0+10  0.33    2700.0
+$
+$ Shell Properties (PSHELL)
+$
+PSHELL  101     1       0.005                   1
+PSHELL  102     1       0.010                   1
+PSHELL  103     2       0.003                   2
+$
+$ Bar Properties (PBARL - rectangular section)
+$
+PBARL   201     1               BAR
+        0.05    0.10
+PBARL   202     1               BAR
+        0.025   0.050
+PBARL   203     2               BAR
+        0.030   0.060
+$
+$ Shell Elements (CQUAD4)
+$
+CQUAD4  1       101     1       2       5       4
+CQUAD4  2       102     2       3       6       5
+CQUAD4  3       103     4       5       6       4
+$
+$ Bar Elements (CBAR)
+$
+CBAR    10      201     1       7       0.0     1.0     0.0
+CBAR    11      202     7       8       0.0     1.0     0.0
+$
+$ Constraints
+$
+SPC1    1       123456  1
+$
+$ Loads
+$
+FORCE   1       3       0       100.0   0.0     -1.0    0.0
+$
+ENDDATA

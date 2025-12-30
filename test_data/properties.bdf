@@ -1,0 +1,16 @@
+$ Included BDF file with properties
+$ This file is included by main_with_include.bdf
+$
+$ Materials
+$
+MAT1    1       2.1+11  0.3     7850.0
+$
+$ Shell Properties
+$
+PSHELL  101     1       0.006                   1
+PSHELL  102     1       0.008                   1
+$
+$ Bar Properties
+$
+PBARL   201     1               BAR
+        0.04    0.08
