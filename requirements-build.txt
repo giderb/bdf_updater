@@ -1,0 +1,14 @@
+# Build requirements for creating standalone executables
+# Install with: pip install -r requirements-build.txt
+
+# Core application requirements
+-r requirements.txt
+
+# PyInstaller for creating executables
+pyinstaller>=5.0
+
+# Icon generation
+Pillow>=9.0.0
+
+# Better SVG rendering (optional but recommended)
+cairosvg>=2.5.0

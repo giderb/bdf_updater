@@ -119,6 +119,52 @@ print(f"Updated {summary['successful']} properties")
 processor.save_bdf("model_updated.bdf", use_write_bdfs=True)
 ```
 
+## Building Standalone Executable
+
+Create a single-file executable that can be distributed without Python installation:
+
+### Prerequisites
+
+```bash
+pip install -r requirements-build.txt
+```
+
+### Build Steps
+
+1. **Generate icons and build executable:**
+
+```bash
+python build_exe.py
+```
+
+2. **Options:**
+
+```bash
+# Clean build (removes previous build artifacts)
+python build_exe.py --clean
+
+# Skip icon generation (use existing icons)
+python build_exe.py --skip-icons
+
+# Build with debug console
+python build_exe.py --debug
+```
+
+3. **Output location:**
+   - Windows: `dist/BDF_Property_Updater.exe`
+   - macOS: `dist/BDF Property Updater.app`
+   - Linux: `dist/BDF_Property_Updater`
+
+### Manual Build with PyInstaller
+
+```bash
+# Generate icons first
+python build_icon.py
+
+# Run PyInstaller
+pyinstaller --clean --noconfirm bdf_updater.spec
+```
+
 ## Testing
 
 Run the test suite:
@@ -153,10 +199,16 @@ bdf_updater/
 ├── __init__.py           # Package initialization
 ├── bdf_processor.py      # Core BDF processing logic
 ├── bdf_updater_gui.py    # PyQt5 GUI application
-├── requirements.txt      # Dependencies
+├── icon_resources.py     # Embedded icon resources
+├── icon.svg              # Source SVG icon
+├── requirements.txt      # Runtime dependencies
+├── requirements-build.txt # Build dependencies
 ├── setup.py              # Package setup
 ├── pytest.ini            # Pytest configuration
 ├── README.md             # This file
+├── build_exe.py          # Build automation script
+├── build_icon.py         # Icon generation script
+├── bdf_updater.spec      # PyInstaller spec file
 ├── tests/
 │   ├── __init__.py
 │   ├── conftest.py       # Pytest fixtures
