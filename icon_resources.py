@@ -4,7 +4,7 @@ Embedded icon resources for the BDF Property Updater application.
 Contains the application icon as embedded SVG data for standalone deployment.
 """
 
-from PyQt5.QtCore import QByteArray
+from PyQt5.QtCore import QByteArray, Qt
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtSvg import QSvgRenderer
 from PyQt5.QtGui import QPainter
@@ -128,7 +128,7 @@ def svg_to_pixmap(svg_data: bytes, width: int, height: int) -> QPixmap:
     """
     renderer = QSvgRenderer(QByteArray(svg_data))
     pixmap = QPixmap(width, height)
-    pixmap.fill(0)  # Transparent background
+    pixmap.fill(Qt.transparent)  # Transparent background
 
     painter = QPainter(pixmap)
     renderer.render(painter)
