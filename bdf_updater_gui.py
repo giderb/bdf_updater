@@ -227,7 +227,7 @@ class BDFUpdaterMainWindow(QMainWindow):
         current_props_layout = QVBoxLayout(current_props_widget)
 
         # Shell properties table
-        shell_group = QGroupBox("Current PSHELL Properties")
+        shell_group = QGroupBox("PSHELL Properties to Update")
         shell_layout = QVBoxLayout(shell_group)
         self.shell_table = PropertyTableWidget(
             ["Property ID", "Thickness", "Material ID", "NSM"]
@@ -236,7 +236,7 @@ class BDFUpdaterMainWindow(QMainWindow):
         current_props_layout.addWidget(shell_group)
 
         # Bar properties table
-        bar_group = QGroupBox("Current PBARL Properties")
+        bar_group = QGroupBox("PBARL Properties to Update")
         bar_layout = QVBoxLayout(bar_group)
         self.bar_table = PropertyTableWidget(
             ["Property ID", "Bar Type", "Dimensions", "Material ID", "Group"]
@@ -244,7 +244,7 @@ class BDFUpdaterMainWindow(QMainWindow):
         bar_layout.addWidget(self.bar_table)
         current_props_layout.addWidget(bar_group)
 
-        self.tabs.addTab(current_props_widget, "Current Properties")
+        self.tabs.addTab(current_props_widget, "Properties to Update")
 
         # Preview tab
         preview_widget = QWidget()
@@ -352,9 +352,13 @@ class BDFUpdaterMainWindow(QMainWindow):
         try:
             self.log(f"Loading BDF file: {bdf_path}")
             self.processor.load_bdf(bdf_path)
-            self.log("BDF file loaded successfully.", "success")
 
-            # Display current properties
+            # Get property counts for logging
+            shell_props = self.processor.get_shell_properties()
+            bar_props = self.processor.get_bar_properties()
+            self.log(f"BDF file loaded successfully. Found {len(shell_props)} PSHELL and {len(bar_props)} PBARL properties.", "success")
+
+            # Refresh display if CSV files already loaded
             self.display_shell_properties()
             self.display_bar_properties()
 
@@ -366,36 +370,62 @@ class BDFUpdaterMainWindow(QMainWindow):
             QMessageBox.critical(self, "Error", str(e))
 
     def display_shell_properties(self):
-        """Display current shell properties in the table."""
+        """Display shell properties that will be updated (filtered by CSV)."""
         self.shell_table.clear_data()
+
+        if self.processor.bdf is None:
+            return
+
+        # Only show properties that are in the updates list
+        update_pids = {u.property_id for u in self.shell_updates}
+        if not update_pids:
+            return
+
         shell_props = self.processor.get_shell_properties()
 
-        for pid, props in sorted(shell_props.items()):
-            self.shell_table.add_row([
-                str(pid),
-                f"{props['thickness']:.6g}",
-                str(props['material_id']),
-                f"{props['nsm']:.6g}"
-            ])
+        displayed = 0
+        for pid in sorted(update_pids):
+            if pid in shell_props:
+                props = shell_props[pid]
+                self.shell_table.add_row([
+                    str(pid),
+                    f"{props['thickness']:.6g}",
+                    str(props['material_id']),
+                    f"{props['nsm']:.6g}"
+                ])
+                displayed += 1
 
-        self.log(f"Found {len(shell_props)} PSHELL properties")
+        self.log(f"Showing {displayed} PSHELL properties to update")
 
     def display_bar_properties(self):
-        """Display current bar properties in the table."""
+        """Display bar properties that will be updated (filtered by CSV)."""
         self.bar_table.clear_data()
+
+        if self.processor.bdf is None:
+            return
+
+        # Only show properties that are in the updates list
+        update_pids = {u.property_id for u in self.bar_updates}
+        if not update_pids:
+            return
+
         bar_props = self.processor.get_bar_properties()
 
-        for pid, props in sorted(bar_props.items()):
-            dims_str = "×".join(f"{d:.6g}" for d in props['dimensions'])
-            self.bar_table.add_row([
-                str(pid),
-                props['bar_type'],
-                dims_str,
-                str(props['material_id']),
-                props['group']
-            ])
+        displayed = 0
+        for pid in sorted(update_pids):
+            if pid in bar_props:
+                props = bar_props[pid]
+                dims_str = "×".join(f"{d:.6g}" for d in props['dimensions'])
+                self.bar_table.add_row([
+                    str(pid),
+                    props['bar_type'],
+                    dims_str,
+                    str(props['material_id']),
+                    props['group']
+                ])
+                displayed += 1
 
-        self.log(f"Found {len(bar_props)} PBARL properties")
+        self.log(f"Showing {displayed} PBARL properties to update")
 
     def load_csv_files(self):
         """Load and parse CSV files."""
@@ -429,6 +459,10 @@ class BDFUpdaterMainWindow(QMainWindow):
                 self, "Info",
                 "No property updates loaded. Please check your CSV files."
             )
+
+        # Refresh the properties display with filtered view
+        self.display_shell_properties()
+        self.display_bar_properties()
 
         self.update_button_states()
 
