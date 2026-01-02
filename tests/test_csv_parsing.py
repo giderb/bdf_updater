@@ -180,13 +180,16 @@ class TestBarCSVParsing:
         assert "positive" in str(exc_info.value).lower()
 
     def test_parse_bar_csv_missing_column(self, temp_dir):
-        """Test parsing CSV with missing column."""
+        """Test parsing CSV with missing column (partial update allowed)."""
         csv_path = temp_dir / "missing_column.csv"
         csv_path.write_text("property_id,height\n201,0.10\n")
 
         updates = BDFProcessor.parse_bar_csv(csv_path)
-        # Should skip rows with insufficient columns
-        assert len(updates) == 0
+        # Height-only updates are now allowed (width will preserve current value)
+        assert len(updates) == 1
+        assert updates[0].property_id == 201
+        assert updates[0].height == pytest.approx(0.10)
+        assert updates[0].width is None  # Width will be preserved from BDF
 
     def test_parse_bar_csv_empty_file(self, temp_dir):
         """Test parsing an empty CSV file."""

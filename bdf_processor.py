@@ -93,7 +93,8 @@ class BDFProcessor:
 
         try:
             self.bdf = BDF()
-            self.bdf.read_bdf(str(self.bdf_path))
+            # save_file_structure=True preserves INCLUDE structure for write_bdfs
+            self.bdf.read_bdf(str(self.bdf_path), save_file_structure=True)
         except Exception as e:
             raise BDFProcessorError(f"Failed to load BDF file: {e}")
 
@@ -484,15 +485,44 @@ class BDFProcessor:
             output_path = Path(output_path)
 
         try:
-            if use_write_bdfs:
-                # write_bdfs preserves INCLUDE structure and writes sub-BDFs
-                self.bdf.write_bdfs(str(output_path))
+            if use_write_bdfs and hasattr(self.bdf, 'active_filenames') and self.bdf.active_filenames:
+                # write_bdfs requires a dict mapping original filenames to output filenames
+                out_filenames = self._build_output_filenames_dict(output_path)
+                self.bdf.write_bdfs(out_filenames)
             else:
                 # write_bdf writes everything to a single file
                 self.bdf.write_bdf(str(output_path))
             return output_path
         except Exception as e:
             raise BDFProcessorError(f"Failed to save BDF file: {e}")
+
+    def _build_output_filenames_dict(self, main_output_path: Path) -> Dict[str, str]:
+        """
+        Build a dictionary mapping original filenames to output filenames.
+
+        For write_bdfs(), pyNastran needs a dict that maps each original file
+        (main + includes) to its output path.
+
+        Args:
+            main_output_path: The desired output path for the main BDF file
+
+        Returns:
+            Dict mapping original file paths to output file paths
+        """
+        out_filenames = {}
+        output_dir = main_output_path.parent
+        main_output_name = main_output_path.name
+
+        for i, orig_path in enumerate(self.bdf.active_filenames):
+            orig_path_obj = Path(orig_path)
+            if i == 0:
+                # Main file - use the specified output path
+                out_filenames[orig_path] = str(main_output_path)
+            else:
+                # Include file - preserve the filename, write to output directory
+                out_filenames[orig_path] = str(output_dir / orig_path_obj.name)
+
+        return out_filenames
 
     def get_update_summary(self) -> Dict:
         """

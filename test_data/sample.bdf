@@ -47,7 +47,7 @@ $ Shell Elements (CQUAD4)
 $
 CQUAD4  1       101     1       2       5       4
 CQUAD4  2       102     2       3       6       5
-CQUAD4  3       103     4       5       6       4
+CQUAD4  3       103     4       5       6       7
 $
 $ Bar Elements (CBAR)
 $

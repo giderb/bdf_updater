@@ -280,6 +280,9 @@ class TestLargeScaleUpdates:
         # Create a BDF with many shell properties
         bdf_content = """$ Test BDF with many properties
 SOL 101
+CEND
+SUBCASE 1
+  SUBTITLE=TEST
 BEGIN BULK
 GRID    1       0       0.0     0.0     0.0
 MAT1    1       2.1+11  0.3     7850.0

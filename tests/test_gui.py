@@ -127,29 +127,39 @@ class TestBDFLoading:
             main_window.load_bdf()
             mock_warning.assert_called_once()
 
-    def test_load_bdf_valid_file(self, main_window, sample_bdf_path, qtbot):
+    def test_load_bdf_valid_file(self, main_window, sample_bdf_path, sample_shell_csv_path, qtbot):
         """Test loading a valid BDF file."""
+        # Load CSV first to have updates, then load BDF
+        main_window.shell_csv_widget.set_path(str(sample_shell_csv_path))
+        main_window.load_csv_files()
         main_window.bdf_file_widget.set_path(str(sample_bdf_path))
         main_window.load_bdf()
 
         # Check that properties are loaded
         assert main_window.processor.bdf is not None
+        # Table shows properties that match the updates list
         assert main_window.shell_table.rowCount() > 0
 
-    def test_load_bdf_displays_shell_properties(self, main_window, sample_bdf_path, qtbot):
-        """Test that shell properties are displayed in table."""
+    def test_load_bdf_displays_shell_properties(self, main_window, sample_bdf_path, sample_shell_csv_path, qtbot):
+        """Test that shell properties are displayed in table after loading CSV."""
+        # Load CSV first to have updates, then load BDF
+        main_window.shell_csv_widget.set_path(str(sample_shell_csv_path))
+        main_window.load_csv_files()
         main_window.bdf_file_widget.set_path(str(sample_bdf_path))
         main_window.load_bdf()
 
-        # sample.bdf has 3 PSHELL properties
+        # sample.bdf has 3 PSHELL properties, CSV has 3 updates
         assert main_window.shell_table.rowCount() == 3
 
-    def test_load_bdf_displays_bar_properties(self, main_window, sample_bdf_path, qtbot):
-        """Test that bar properties are displayed in table."""
+    def test_load_bdf_displays_bar_properties(self, main_window, sample_bdf_path, sample_bar_csv_path, qtbot):
+        """Test that bar properties are displayed in table after loading CSV."""
+        # Load CSV first to have updates, then load BDF
+        main_window.bar_csv_widget.set_path(str(sample_bar_csv_path))
+        main_window.load_csv_files()
         main_window.bdf_file_widget.set_path(str(sample_bdf_path))
         main_window.load_bdf()
 
-        # sample.bdf has 3 PBARL properties
+        # sample.bdf has 3 PBARL properties, CSV has 3 updates
         assert main_window.bar_table.rowCount() == 3
 
     def test_load_bdf_updates_status_bar(self, main_window, sample_bdf_path, qtbot):
@@ -343,14 +353,16 @@ class TestLogFunctionality:
         main_window.log("Error message", "error")
         log_html = main_window.log_text.toHtml()
         assert "Error message" in log_html
-        assert "red" in log_html
+        # Qt converts color names to hex: red -> #ff0000
+        assert "red" in log_html or "#ff0000" in log_html
 
     def test_log_success_level(self, main_window, qtbot):
         """Test log with success level."""
         main_window.log("Success message", "success")
         log_html = main_window.log_text.toHtml()
         assert "Success message" in log_html
-        assert "green" in log_html
+        # Qt converts color names to hex: green -> #008000
+        assert "green" in log_html or "#008000" in log_html
 
 
 class TestPropertyTables:
@@ -375,8 +387,11 @@ class TestPropertyTables:
         assert "Bar Type" in headers
         assert "Dimensions" in headers
 
-    def test_table_clear_data(self, main_window, sample_bdf_path, qtbot):
+    def test_table_clear_data(self, main_window, sample_bdf_path, sample_shell_csv_path, qtbot):
         """Test that table can be cleared."""
+        # Load CSV first to have updates, then load BDF
+        main_window.shell_csv_widget.set_path(str(sample_shell_csv_path))
+        main_window.load_csv_files()
         main_window.bdf_file_widget.set_path(str(sample_bdf_path))
         main_window.load_bdf()
 
