@@ -1,0 +1,12 @@
+# SOL200 Optimizer - Build Dependencies
+# Install with: pip install -r requirements-build.txt
+
+# Runtime requirements
+-r requirements.txt
+
+# Build tools
+pyinstaller>=5.0.0
+
+# Icon generation (optional)
+Pillow>=9.0.0
+cairosvg>=2.5.0

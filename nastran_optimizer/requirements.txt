@@ -1,0 +1,25 @@
+# SOL200 Optimizer - Runtime Requirements
+# MSC Nastran SOL200 Optimization Tool
+
+# Core dependencies
+pyNastran>=1.3.4
+PyQt6>=6.4.0
+numpy>=1.21.0
+pandas>=1.3.0
+
+# Equation parsing
+sympy>=1.10.0
+
+# Plotting and visualization
+pyqtgraph>=0.13.0
+
+# Logging and configuration
+pyyaml>=6.0
+
+# Testing
+pytest>=7.0.0
+pytest-qt>=4.2.0
+pytest-cov>=4.0.0
+
+# Type checking
+mypy>=1.0.0
